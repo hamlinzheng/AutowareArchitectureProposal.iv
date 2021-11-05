@@ -34,7 +34,9 @@ void TrackedObjectsDisplay::processMessage(TrackedObjects::ConstSharedPtr msg)
   for (const auto & object : msg->objects) {
     // Get marker for shape
     auto shape_marker_ptr = get_marker_ptr(
-      object.shape[0], object.kinematics.centroid_position, object.kinematics.orientation,
+      object.shape[0],
+      object.kinematics.pose_with_covariance.pose.position,
+      object.kinematics.pose_with_covariance.pose.orientation,
       object.classification);
     shape_marker_ptr->header = msg->header;
     shape_marker_ptr->id = id++;
@@ -51,18 +53,18 @@ void TrackedObjectsDisplay::processMessage(TrackedObjects::ConstSharedPtr msg)
 }
 
 visualization_msgs::msg::Marker::SharedPtr TrackedObjectsDisplay::get_marker_ptr_for_track_id(
-  const autoware_auto_msgs::msg::TrackedObject & track)
+  const autoware_auto_perception_msgs::msg::TrackedObject & track)
 {
   static constexpr auto kTextSize = 2.0;
 
   auto marker_ptr = std::make_shared<Marker>();
 
   marker_ptr->type = Marker::TEXT_VIEW_FACING;
-  marker_ptr->text = std::to_string(track.object_id);
+  marker_ptr->text = uuid_to_string(track.object_id);
   marker_ptr->action = Marker::ADD;
   marker_ptr->scale.z = kTextSize;
   marker_ptr->color = get_color_rgba(track.classification);
-  marker_ptr->pose.position = track.kinematics.centroid_position;
+  marker_ptr->pose.position = track.kinematics.pose_with_covariance.pose.position;
 
   return marker_ptr;
 }

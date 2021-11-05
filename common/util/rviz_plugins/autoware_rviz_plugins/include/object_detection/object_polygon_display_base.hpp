@@ -14,7 +14,7 @@
 #ifndef OBJECT_DETECTION__OBJECT_POLYGON_DISPLAY_BASE_HPP_
 #define OBJECT_DETECTION__OBJECT_POLYGON_DISPLAY_BASE_HPP_
 
-#include <autoware_auto_msgs/msg/object_classification.hpp>
+#include <autoware_auto_perception_msgs/msg/object_classification.hpp>
 #include <common/color_alpha_property.hpp>
 #include <object_detection/object_polygon_detail.hpp>
 #include <rviz_common/display.hpp>
@@ -47,10 +47,10 @@ public:
   using Color = std::array<float, 3U>;
   using Marker = visualization_msgs::msg::Marker;
   using MarkerCommon = rviz_default_plugins::displays::MarkerCommon;
-  using ObjectClassificationMsg = autoware_auto_msgs::msg::ObjectClassification;
+  using ObjectClassificationMsg = autoware_auto_perception_msgs::msg::ObjectClassification;
   using RosTopicDisplay = rviz_common::RosTopicDisplay<MsgT>;
 
-  using PolygonPropertyMap = std::unordered_map<ObjectClassificationMsg::_classification_type,
+  using PolygonPropertyMap = std::unordered_map<ObjectClassificationMsg::_label_type,
       common::ColorAlphaProperty>;
 
   explicit ObjectPolygonDisplayBase(const std::string & default_topic)
@@ -127,7 +127,7 @@ protected:
   /// \return Marker ptr. Id and header will have to be set by the caller
   template<typename ClassificationContainerT>
   visualization_msgs::msg::Marker::SharedPtr get_marker_ptr(
-    const autoware_auto_msgs::msg::Shape & shape_msg,
+    const autoware_auto_perception_msgs::msg::Shape & shape_msg,
     const geometry_msgs::msg::Point & centroid,
     const geometry_msgs::msg::Quaternion & orientation,
     const ClassificationContainerT & labels)
@@ -155,9 +155,6 @@ protected:
     auto it = m_polygon_properties.find(label);
 
     if (it == m_polygon_properties.end()) {
-      RCLCPP_WARN(
-        rclcpp::get_logger(kLoggerName), "Color alpha property does not exist for "
-        "label ", std::to_string(label), "Using property values from UNKNOWN");
       it = m_polygon_properties.find(ObjectClassificationMsg::UNKNOWN);
     }
     return it->second;

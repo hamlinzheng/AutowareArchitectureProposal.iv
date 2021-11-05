@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License..
 
-#include <autoware_auto_tf2/tf2_autoware_auto_msgs.hpp>
-#include <geometry/bounding_box/bounding_box_common.hpp>
 #include <geometry_msgs/msg/transform_stamped.hpp>
 #include <object_detection/object_polygon_detail.hpp>
 
@@ -31,14 +29,14 @@ namespace detail
 using Marker = visualization_msgs::msg::Marker;
 
 visualization_msgs::msg::Marker::SharedPtr get_2d_polygon_marker_ptr(
-  const autoware_auto_msgs::msg::Shape & shape_msg,
+  const autoware_auto_perception_msgs::msg::Shape & shape_msg,
   const geometry_msgs::msg::Point & centroid,
   const geometry_msgs::msg::Quaternion & orientation,
   const std_msgs::msg::ColorRGBA & color_rgba)
 {
   auto marker_ptr = std::make_shared<Marker>();
 
-  if (shape_msg.polygon.points.empty()) {
+  if (shape_msg.footprint.points.empty()) {
     RCLCPP_WARN(rclcpp::get_logger("ObjectPolygonDisplayBase"), "Empty polygon!");
     return marker_ptr;
   }
@@ -48,9 +46,7 @@ visualization_msgs::msg::Marker::SharedPtr get_2d_polygon_marker_ptr(
   marker_ptr->action = Marker::ADD;
   marker_ptr->color = color_rgba;
 
-  auto corners = autoware::common::geometry::bounding_box::details::get_transformed_corners(
-    shape_msg, centroid, orientation);
-
+  std::vector<geometry_msgs::msg::Point32> corners;
   for (const auto & pt32 : corners) {
     marker_ptr->points.push_back(to_point(pt32));
   }
@@ -61,14 +57,14 @@ visualization_msgs::msg::Marker::SharedPtr get_2d_polygon_marker_ptr(
 }
 
 visualization_msgs::msg::Marker::SharedPtr get_3d_polygon_marker_ptr(
-  const autoware_auto_msgs::msg::Shape & shape_msg,
+  const autoware_auto_perception_msgs::msg::Shape & shape_msg,
   const geometry_msgs::msg::Point & centroid,
   const geometry_msgs::msg::Quaternion & orientation,
   const std_msgs::msg::ColorRGBA & color_rgba)
 {
   auto marker_ptr = std::make_shared<Marker>();
 
-  if (shape_msg.polygon.points.empty()) {
+  if (shape_msg.footprint.points.empty()) {
     RCLCPP_WARN(rclcpp::get_logger("ObjectPolygonDisplayBase"), "Empty polygon!");
     return marker_ptr;
   }
@@ -78,8 +74,7 @@ visualization_msgs::msg::Marker::SharedPtr get_3d_polygon_marker_ptr(
   marker_ptr->action = Marker::ADD;
   marker_ptr->color = color_rgba;
 
-  const auto corners = autoware::common::geometry::bounding_box::details::get_transformed_corners(
-    shape_msg, centroid, orientation);
+  std::vector<geometry_msgs::msg::Point32> corners;
 
   // To construct a 3d polygon using line list, we need to define all the edges with the two
   // end points. We will first draw lower part of the polygon by inserting all the vertices
@@ -100,10 +95,10 @@ visualization_msgs::msg::Marker::SharedPtr get_3d_polygon_marker_ptr(
   marker_ptr->points.push_back(first_pt);
 
   // Construct upper polygon
-  first_pt.z += static_cast<double>(shape_msg.height);
+  first_pt.z += static_cast<double>(shape_msg.dimensions.z);
   for (auto it = corners.begin(); it != corners.end(); ++it) {
     geometry_msgs::msg::Point pt = to_point(*it);
-    pt.z += static_cast<double>(shape_msg.height);
+    pt.z += static_cast<double>(shape_msg.dimensions.z);
     marker_ptr->points.push_back(pt);
     if (it != corners.begin()) {
       marker_ptr->points.push_back(pt);
@@ -115,7 +110,7 @@ visualization_msgs::msg::Marker::SharedPtr get_3d_polygon_marker_ptr(
   for (const auto & pt32 : corners) {
     geometry_msgs::msg::Point pt = to_point(pt32);
     marker_ptr->points.push_back(pt);
-    pt.z += static_cast<double>(shape_msg.height);
+    pt.z += static_cast<double>(shape_msg.dimensions.z);
     marker_ptr->points.push_back(pt);
   }
 
