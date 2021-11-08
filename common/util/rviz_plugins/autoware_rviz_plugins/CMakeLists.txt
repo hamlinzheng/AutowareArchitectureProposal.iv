@@ -23,7 +23,6 @@ find_package(Qt5 REQUIRED COMPONENTS Widgets)
 ament_auto_find_build_dependencies()
 
 set(OD_PLUGIN_LIB_SRC
-  # src/object_detection/bounding_box_array_display.cpp
   src/object_detection/detected_objects_display.cpp
   src/object_detection/tracked_objects_display.cpp
 )
@@ -32,7 +31,6 @@ set(OD_PLUGIN_LIB_HEADERS
   include/visibility_control.hpp
 )
 set(OD_PLUGIN_LIB_HEADERS_TO_WRAP
-  # include/object_detection/bounding_box_array_display.hpp
   include/object_detection/detected_objects_display.hpp
   include/object_detection/tracked_objects_display.hpp
 )
