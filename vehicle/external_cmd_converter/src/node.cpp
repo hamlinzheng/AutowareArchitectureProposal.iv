@@ -26,8 +26,7 @@ ExternalCmdConverterNode::ExternalCmdConverterNode(const rclcpp::NodeOptions & n
 {
   using std::placeholders::_1;
 
-  pub_cmd_ = create_publisher<autoware_control_msgs::msg::ControlCommandStamped>(
-    "out/control_cmd", rclcpp::QoS{1});
+  pub_cmd_ = create_publisher<ControlCommandStamped>("out/control_cmd", rclcpp::QoS{1});
   pub_current_cmd_ = create_publisher<autoware_external_api_msgs::msg::ControlCommandStamped>(
     "out/latest_external_control_cmd", rclcpp::QoS{1});
 
@@ -148,12 +147,14 @@ void ExternalCmdConverterNode::onExternalCmd(
   }
 
   // Publish ControlCommand
-  autoware_control_msgs::msg::ControlCommandStamped output;
-  output.header.stamp = cmd_ptr->stamp;
-  output.control.steering_angle = cmd_ptr->control.steering_angle;
-  output.control.steering_angle_velocity = cmd_ptr->control.steering_angle_velocity;
-  output.control.velocity = ref_velocity;
-  output.control.acceleration = ref_acceleration;
+  ControlCommandStamped output;
+  output.stamp = cmd_ptr->stamp;
+  output.lateral.stamp = cmd_ptr->stamp;
+  output.lateral.steering_tire_angle = cmd_ptr->control.steering_angle;
+  output.lateral.steering_tire_rotation_rate = cmd_ptr->control.steering_angle_velocity;
+  output.longitudinal.stamp = cmd_ptr->stamp;
+  output.longitudinal.speed = ref_velocity;
+  output.longitudinal.acceleration = ref_acceleration;
 
   pub_cmd_->publish(output);
 }

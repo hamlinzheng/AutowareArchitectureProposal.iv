@@ -20,7 +20,7 @@
 #include <raw_vehicle_cmd_converter/brake_map.hpp>
 #include <rclcpp/rclcpp.hpp>
 
-#include <autoware_control_msgs/msg/control_command_stamped.hpp>
+#include <autoware_auto_control_msgs/msg/ackermann_control_command.hpp>
 #include <autoware_control_msgs/msg/gate_mode.hpp>
 #include <autoware_external_api_msgs/msg/control_command_stamped.hpp>
 #include <autoware_external_api_msgs/msg/heartbeat.hpp>
@@ -35,6 +35,7 @@ namespace external_cmd_converter
 {
 using raw_vehicle_cmd_converter::AccelMap;
 using raw_vehicle_cmd_converter::BrakeMap;
+using ControlCommandStamped = autoware_auto_control_msgs::msg::AckermannControlCommand;
 
 class ExternalCmdConverterNode : public rclcpp::Node
 {
@@ -43,7 +44,7 @@ public:
 
 private:
   // Publisher
-  rclcpp::Publisher<autoware_control_msgs::msg::ControlCommandStamped>::SharedPtr pub_cmd_;
+  rclcpp::Publisher<ControlCommandStamped>::SharedPtr pub_cmd_;
   rclcpp::Publisher<autoware_external_api_msgs::msg::ControlCommandStamped>::SharedPtr
     pub_current_cmd_;
 
