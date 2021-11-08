@@ -25,7 +25,6 @@
 #include <autoware_control_msgs/msg/gate_mode.hpp>
 #include <autoware_external_api_msgs/msg/control_command_stamped.hpp>
 #include <autoware_external_api_msgs/msg/heartbeat.hpp>
-#include <autoware_vehicle_msgs/msg/vehicle_command.hpp>
 #include <geometry_msgs/msg/twist_stamped.hpp>
 
 #include <memory>
