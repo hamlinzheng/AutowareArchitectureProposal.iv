@@ -1,0 +1,9 @@
+<launch>
+  <arg name="input/dynamic_object_array" default="/perception/object_recognition/objects"/>
+  <arg name="output/detected_objects" default="/auto/perception/detected_objects"/>
+
+  <node pkg="aap_auto_msgs_converter" exec="aap_auto_perception_msgs_converter_node" name="aap_auto_perception_msgs_converter_node" output="screen">
+    <remap from="~/input/dynamic_object_array" to="$(var input/dynamic_object_array)" />
+    <remap from="~/output/detected_objects" to="$(var output/detected_objects)" />
+  </node>
+</launch>
