@@ -30,12 +30,12 @@ ExternalCmdConverterNode::ExternalCmdConverterNode(const rclcpp::NodeOptions & n
   pub_current_cmd_ = create_publisher<autoware_external_api_msgs::msg::ControlCommandStamped>(
     "out/latest_external_control_cmd", rclcpp::QoS{1});
 
-  sub_velocity_ = create_subscription<geometry_msgs::msg::TwistStamped>(
-    "in/twist", 1, std::bind(&ExternalCmdConverterNode::onVelocity, this, _1));
+  sub_velocity_ = create_subscription<Odometry>(
+    "in/odometry", 1, std::bind(&ExternalCmdConverterNode::onOdom, this, _1));
   sub_control_cmd_ = create_subscription<autoware_external_api_msgs::msg::ControlCommandStamped>(
     "in/external_control_cmd", 1, std::bind(&ExternalCmdConverterNode::onExternalCmd, this, _1));
   sub_vehicle_state_cmd_ = create_subscription<VehicleStateCommand>(
-    "in/shift_cmd", 1, std::bind(&ExternalCmdConverterNode::onVehicleStateCmd, this, _1));
+    "in/vehicle_state_cmd", 1, std::bind(&ExternalCmdConverterNode::onVehicleStateCmd, this, _1));
   sub_gate_mode_ = create_subscription<autoware_control_msgs::msg::GateMode>(
     "in/current_gate_mode", 1, std::bind(&ExternalCmdConverterNode::onGateMode, this, _1));
   sub_emergency_stop_heartbeat_ = create_subscription<autoware_external_api_msgs::msg::Heartbeat>(
@@ -86,14 +86,12 @@ ExternalCmdConverterNode::ExternalCmdConverterNode(const rclcpp::NodeOptions & n
 
 void ExternalCmdConverterNode::onTimer() { updater_.force_update(); }
 
-void ExternalCmdConverterNode::onVelocity(
-  const geometry_msgs::msg::TwistStamped::ConstSharedPtr msg)
+void ExternalCmdConverterNode::onOdom(const Odometry::ConstSharedPtr msg)
 {
-  current_velocity_ptr_ = std::make_shared<double>(msg->twist.linear.x);
+  current_velocity_ptr_ = std::make_shared<double>(msg->twist.twist.linear.x);
 }
 
-void ExternalCmdConverterNode::onVehicleStateCmd(
-  const VehicleStateCommand::ConstSharedPtr msg)
+void ExternalCmdConverterNode::onVehicleStateCmd(const VehicleStateCommand::ConstSharedPtr msg)
 {
   current_vehicle_state_cmd_ = msg;
 }

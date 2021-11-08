@@ -26,6 +26,7 @@
 #include <autoware_external_api_msgs/msg/control_command_stamped.hpp>
 #include <autoware_external_api_msgs/msg/heartbeat.hpp>
 #include <geometry_msgs/msg/twist_stamped.hpp>
+#include <nav_msgs/msg/odometry.hpp>
 
 #include <memory>
 #include <string>
@@ -36,6 +37,7 @@ using raw_vehicle_cmd_converter::AccelMap;
 using raw_vehicle_cmd_converter::BrakeMap;
 using ControlCommandStamped = autoware_auto_control_msgs::msg::AckermannControlCommand;
 using VehicleStateCommand = autoware_auto_vehicle_msgs::msg::VehicleStateCommand;
+using Odometry = nav_msgs::msg::Odometry;
 
 class ExternalCmdConverterNode : public rclcpp::Node
 {
@@ -49,7 +51,7 @@ private:
     pub_current_cmd_;
 
   // Subscriber
-  rclcpp::Subscription<geometry_msgs::msg::TwistStamped>::SharedPtr sub_velocity_;
+  rclcpp::Subscription<Odometry>::SharedPtr sub_velocity_;
   rclcpp::Subscription<autoware_external_api_msgs::msg::ControlCommandStamped>::SharedPtr
     sub_control_cmd_;
   rclcpp::Subscription<VehicleStateCommand>::SharedPtr sub_vehicle_state_cmd_;
@@ -57,7 +59,7 @@ private:
   rclcpp::Subscription<autoware_external_api_msgs::msg::Heartbeat>::SharedPtr
     sub_emergency_stop_heartbeat_;
 
-  void onVelocity(const geometry_msgs::msg::TwistStamped::ConstSharedPtr msg);
+  void onOdom(const Odometry::ConstSharedPtr msg);
   void onExternalCmd(
     const autoware_external_api_msgs::msg::ControlCommandStamped::ConstSharedPtr cmd_ptr);
   void onVehicleStateCmd(const VehicleStateCommand::ConstSharedPtr msg);
