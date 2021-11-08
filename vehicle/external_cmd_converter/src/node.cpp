@@ -34,8 +34,8 @@ ExternalCmdConverterNode::ExternalCmdConverterNode(const rclcpp::NodeOptions & n
     "in/twist", 1, std::bind(&ExternalCmdConverterNode::onVelocity, this, _1));
   sub_control_cmd_ = create_subscription<autoware_external_api_msgs::msg::ControlCommandStamped>(
     "in/external_control_cmd", 1, std::bind(&ExternalCmdConverterNode::onExternalCmd, this, _1));
-  sub_shift_cmd_ = create_subscription<autoware_vehicle_msgs::msg::ShiftStamped>(
-    "in/shift_cmd", 1, std::bind(&ExternalCmdConverterNode::onShiftCmd, this, _1));
+  sub_vehicle_state_cmd_ = create_subscription<VehicleStateCommand>(
+    "in/shift_cmd", 1, std::bind(&ExternalCmdConverterNode::onVehicleStateCmd, this, _1));
   sub_gate_mode_ = create_subscription<autoware_control_msgs::msg::GateMode>(
     "in/current_gate_mode", 1, std::bind(&ExternalCmdConverterNode::onGateMode, this, _1));
   sub_emergency_stop_heartbeat_ = create_subscription<autoware_external_api_msgs::msg::Heartbeat>(
@@ -81,7 +81,7 @@ ExternalCmdConverterNode::ExternalCmdConverterNode(const rclcpp::NodeOptions & n
   updater_.add("remote_control_topic_status", this, &ExternalCmdConverterNode::checkTopicStatus);
 
   // Set default values
-  current_shift_cmd_ = std::make_shared<autoware_vehicle_msgs::msg::ShiftStamped>();
+  current_vehicle_state_cmd_ = std::make_shared<VehicleStateCommand>();
 }
 
 void ExternalCmdConverterNode::onTimer() { updater_.force_update(); }
@@ -92,10 +92,10 @@ void ExternalCmdConverterNode::onVelocity(
   current_velocity_ptr_ = std::make_shared<double>(msg->twist.linear.x);
 }
 
-void ExternalCmdConverterNode::onShiftCmd(
-  const autoware_vehicle_msgs::msg::ShiftStamped::ConstSharedPtr msg)
+void ExternalCmdConverterNode::onVehicleStateCmd(
+  const VehicleStateCommand::ConstSharedPtr msg)
 {
-  current_shift_cmd_ = msg;
+  current_vehicle_state_cmd_ = msg;
 }
 
 void ExternalCmdConverterNode::onEmergencyStopHeartbeat(
@@ -124,22 +124,22 @@ void ExternalCmdConverterNode::onExternalCmd(
   }
 
   // Calculate reference velocity and acceleration
-  const double sign = getShiftVelocitySign(*current_shift_cmd_);
+  const double sign = getShiftVelocitySign(*current_vehicle_state_cmd_);
   const double ref_acceleration = calculateAcc(cmd_ptr->control, std::fabs(*current_velocity_ptr_));
 
   if (ref_acceleration > 0.0 && sign == 0.0) {
     RCLCPP_WARN_THROTTLE(
       get_logger(), *get_clock(), std::chrono::milliseconds(1000).count(),
       "Target acceleration is positive, but the gear is not appropriate. accel: %f, gear: %d",
-      ref_acceleration, current_shift_cmd_->shift.data);
+      ref_acceleration, current_vehicle_state_cmd_->gear);
   }
 
   double ref_velocity = *current_velocity_ptr_ + ref_acceleration * ref_vel_gain_ * sign;
-  if (current_shift_cmd_->shift.data == autoware_vehicle_msgs::msg::Shift::REVERSE) {
+  if (current_vehicle_state_cmd_->gear == VehicleStateCommand::GEAR_REVERSE) {
     ref_velocity = std::min(0.0, ref_velocity);
   } else if (
-    current_shift_cmd_->shift.data == autoware_vehicle_msgs::msg::Shift::DRIVE ||  // NOLINT
-    current_shift_cmd_->shift.data == autoware_vehicle_msgs::msg::Shift::LOW) {
+    current_vehicle_state_cmd_->gear == VehicleStateCommand::GEAR_DRIVE ||  // NOLINT
+    current_vehicle_state_cmd_->gear == VehicleStateCommand::GEAR_LOW) {
     ref_velocity = std::max(0.0, ref_velocity);
   } else {
     ref_velocity = 0.0;
@@ -176,18 +176,15 @@ double ExternalCmdConverterNode::calculateAcc(
   return ref_acceleration;
 }
 
-double ExternalCmdConverterNode::getShiftVelocitySign(
-  const autoware_vehicle_msgs::msg::ShiftStamped & cmd)
+double ExternalCmdConverterNode::getShiftVelocitySign(const VehicleStateCommand & cmd)
 {
-  using autoware_vehicle_msgs::msg::Shift;
-
-  if (cmd.shift.data == Shift::DRIVE) {
+  if (cmd.gear == VehicleStateCommand::GEAR_DRIVE) {
     return 1.0;
   }
-  if (cmd.shift.data == Shift::LOW) {
+  if (cmd.gear == VehicleStateCommand::GEAR_LOW) {
     return 1.0;
   }
-  if (cmd.shift.data == Shift::REVERSE) {
+  if (cmd.gear == VehicleStateCommand::GEAR_REVERSE) {
     return -1.0;
   }
 
